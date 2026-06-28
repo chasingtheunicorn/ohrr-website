@@ -18,6 +18,21 @@ export default function StaffDashboard() {
       h: 'Adoptable rabbits',
       p: 'Add rabbits with photos and set their adoption status.',
     },
+    can('volunteers.shifts.manage') && {
+      to: '/staff/volunteer',
+      h: 'Volunteer opportunities',
+      p: 'Post socialization shifts, transport runs, and event help.',
+    },
+    can('content.education.edit') && {
+      to: '/staff/care',
+      h: 'Care guides',
+      p: 'Write and edit the Rabbit Care articles in Learn.',
+    },
+    (can('staff.invite') || can('staff.permissions.manage')) && {
+      to: '/staff/team',
+      h: 'Team',
+      p: 'Invite staff and choose what each person can do.',
+    },
   ].filter(Boolean) as { to: string; h: string; p: string }[]
 
   return (
@@ -52,7 +67,7 @@ export default function StaffDashboard() {
 
       <p className="mt-8 rounded-2xl bg-brand-blue-50 px-4 py-3 text-sm text-slate-600">
         Anything you change here updates <strong>both this website and the OHRR app</strong> — they
-        share the same live data.{!isAdmin ? '' : ' (More tools — volunteer, care guides, team — are coming next.)'}
+        share the same live data.{isAdmin ? ' As an owner/admin you have every tool above.' : ''}
       </p>
     </div>
   )

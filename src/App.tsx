@@ -13,6 +13,9 @@ import StaffShell from './components/StaffShell'
 import StaffDashboard from './pages/staff/Dashboard'
 import ManageAnnouncements from './pages/staff/ManageAnnouncements'
 import ManageRabbits from './pages/staff/ManageRabbits'
+import ManageVolunteer from './pages/staff/ManageVolunteer'
+import ManageCare from './pages/staff/ManageCare'
+import Team from './pages/staff/Team'
 
 export default function App() {
   return (
@@ -29,6 +32,9 @@ export default function App() {
         <Route index element={<StaffDashboard />} />
         <Route path="announcements" element={<ManageAnnouncements />} />
         <Route path="rabbits" element={<ManageRabbits />} />
+        <Route path="volunteer" element={<ManageVolunteer />} />
+        <Route path="care" element={<ManageCare />} />
+        <Route path="team" element={<Team />} />
         <Route path="*" element={<StaffDashboard />} />
       </Route>
 

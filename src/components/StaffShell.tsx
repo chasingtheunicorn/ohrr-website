@@ -87,8 +87,51 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
     isActive ? 'bg-brand-blue text-white' : 'text-slate-600 hover:bg-slate-100'
   }`
 
+function JoinByCode({ onJoined }: { onJoined: () => Promise<void> }) {
+  const [code, setCode] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const submit = async (e: { preventDefault(): void }) => {
+    e.preventDefault()
+    setError(null)
+    setBusy(true)
+    const trimmed = code.trim()
+    // Try a worker invite code first, then a one-time owner (master) code.
+    const a = await supabase.rpc('redeem_invite_code', { p_code: trimmed })
+    let ok = !a.error
+    let bErr: unknown = null
+    if (!ok) {
+      const b = await supabase.rpc('redeem_master_code', { p_code: trimmed })
+      ok = !b.error
+      bErr = b.error
+    }
+    if (!ok) {
+      const msgs = [errMessage(a.error), errMessage(bErr)]
+      const informative = msgs.find((m) => /expired|used|authenticat/i.test(m))
+      setError(informative ?? "That code isn't valid. Check it with your OHRR owner — it may have expired or already been used.")
+      setBusy(false)
+      return
+    }
+    await onJoined()
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm">
+      <label className="block text-sm font-semibold text-slate-700">
+        Have an invite code?
+        <input className={`${staffInput} font-mono tracking-wider`} value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="e.g. 3F9A2C7B1D" />
+      </label>
+      {error && <p className="mt-2 text-sm font-semibold text-red-600">{error}</p>}
+      <button type="submit" disabled={busy || !code.trim()} className={`${btn.orange} mt-3 w-full disabled:opacity-60`}>
+        {busy ? 'Joining…' : 'Join the team'}
+      </button>
+    </form>
+  )
+}
+
 export default function StaffShell() {
-  const { configured, loading, user, membership, can, signOut } = useStaff()
+  const { configured, loading, user, membership, can, signOut, refresh } = useStaff()
 
   if (!configured)
     return <div className="mx-auto max-w-md px-5 py-16 text-center text-slate-600">Backend not configured.</div>
@@ -98,10 +141,12 @@ export default function StaffShell() {
   if (!membership) {
     return (
       <div className="mx-auto max-w-md px-5 py-16 text-center">
-        <h1 className="font-display text-xl font-extrabold text-ink">No staff access yet</h1>
+        <h1 className="font-display text-xl font-extrabold text-ink">Join the OHRR team</h1>
         <p className="mt-2 text-sm text-slate-600">
-          You're signed in, but this account isn't an OHRR staff member. Ask an owner to invite you.
+          You're signed in as <strong>{user.email}</strong>, but this account isn't an OHRR staff member yet.
+          Enter the invite code an owner gave you — or the owner's setup code.
         </p>
+        <JoinByCode onJoined={refresh} />
         <button onClick={signOut} className={`${btn.outline} mt-4`}>Sign out</button>
       </div>
     )
@@ -126,6 +171,9 @@ export default function StaffShell() {
             {(can('adoptions.listings.create') || can('adoptions.listings.edit') || can('adoptions.status.change')) && (
               <NavLink to="/staff/rabbits" className={navClass}>Rabbits</NavLink>
             )}
+            {can('volunteers.shifts.manage') && <NavLink to="/staff/volunteer" className={navClass}>Volunteer</NavLink>}
+            {can('content.education.edit') && <NavLink to="/staff/care" className={navClass}>Care guides</NavLink>}
+            {(can('staff.invite') || can('staff.permissions.manage')) && <NavLink to="/staff/team" className={navClass}>Team</NavLink>}
           </nav>
           <div className="flex items-center gap-2">
             <Link to="/" className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-500 hover:bg-slate-50">

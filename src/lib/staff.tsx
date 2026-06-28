@@ -30,6 +30,49 @@ export const CAPS = [
 ] as const
 export type Cap = (typeof CAPS)[number]
 
+// Human-readable catalog grouped by area — drives the Team permission toggles.
+export interface PermissionMeta {
+  key: Cap
+  area: string
+  description: string
+}
+export const PERMISSION_CATALOG: PermissionMeta[] = [
+  { key: 'hopshop.products.create', area: 'Hop Shop', description: 'Add new products' },
+  { key: 'hopshop.products.edit', area: 'Hop Shop', description: 'Edit product details' },
+  { key: 'hopshop.products.delete', area: 'Hop Shop', description: 'Delete products' },
+  { key: 'hopshop.inventory.update', area: 'Hop Shop', description: 'Update stock quantities' },
+  { key: 'hopshop.orders.view', area: 'Hop Shop', description: 'View orders' },
+  { key: 'adoptions.listings.create', area: 'Adoptions', description: 'Create adoptable rabbit listings' },
+  { key: 'adoptions.listings.edit', area: 'Adoptions', description: 'Edit adoptable rabbit listings' },
+  { key: 'adoptions.status.change', area: 'Adoptions', description: "Change a rabbit's adoption status" },
+  { key: 'volunteers.shifts.manage', area: 'Volunteers', description: 'Create/manage volunteer shifts' },
+  { key: 'volunteers.signups.approve', area: 'Volunteers', description: 'Approve volunteer sign-ups' },
+  { key: 'content.education.edit', area: 'Content', description: 'Edit education / care content' },
+  { key: 'events.bunfest.manage', area: 'Events', description: 'Manage Midwest BunFest info' },
+  { key: 'announcements.post', area: 'Content', description: 'Post announcements' },
+  { key: 'staff.invite', area: 'Staff', description: 'Invite workers' },
+  { key: 'staff.permissions.manage', area: 'Staff', description: 'Grant/revoke worker permissions & status' },
+  { key: 'audit.view', area: 'Staff', description: 'View the activity log' },
+]
+
+// Access presets (mirror the DB permission_presets seed) for quick invites.
+export const PRESETS: Record<string, Cap[]> = {
+  'Hop Shop Manager': [
+    'hopshop.products.create',
+    'hopshop.products.edit',
+    'hopshop.products.delete',
+    'hopshop.inventory.update',
+    'hopshop.orders.view',
+  ],
+  'Adoptions Coordinator': [
+    'adoptions.listings.create',
+    'adoptions.listings.edit',
+    'adoptions.status.change',
+  ],
+  'Volunteer Lead': ['volunteers.shifts.manage', 'volunteers.signups.approve'],
+  'Content Editor': ['content.education.edit', 'announcements.post', 'events.bunfest.manage'],
+}
+
 export interface Membership {
   id: string
   orgId: string
