@@ -17,3 +17,22 @@ export interface Announcement {
   title: string
   body: string
 }
+
+export interface CareArticle {
+  id: string
+  slug: string
+  title: string
+  icon: string
+  summary: string
+  tip?: string | null
+}
+
+export interface VolunteerOpp {
+  id: string
+  category: string
+  title: string
+  detail?: string | null
+  when_text?: string | null
+  where_text?: string | null
+  spots?: string | null
+}

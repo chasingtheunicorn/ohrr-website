@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { supabase, isConfigured } from './supabase'
-import type { Rabbit, Announcement } from './types'
+import type { Rabbit, Announcement, CareArticle, VolunteerOpp } from './types'
 import { sampleRabbits } from '../data/sampleRabbits'
 
-export type RabbitsSource = 'live' | 'sample'
+export type Source = 'live' | 'sample'
 
 interface RabbitRow {
   id: string
@@ -18,12 +18,14 @@ interface RabbitRow {
   photos: string[] | null
 }
 
-// Featured adoptable rabbits. Pulls the live list from the SAME Supabase the app
-// uses; falls back to the bundled samples when none are published yet.
-export function useFeaturedRabbits(limit = 6): { rabbits: Rabbit[] | null; source: RabbitsSource } {
-  const [rabbits, setRabbits] = useState<Rabbit[] | null>(null)
-  const [source, setSource] = useState<RabbitsSource>('sample')
+function mapRabbit(r: RabbitRow): Rabbit {
+  return { ...r, photos: r.photos ?? [], photo: r.photos?.[0] }
+}
 
+// Adoptable rabbits from the SAME Supabase the app uses; falls back to samples.
+export function useRabbits(limit = 60): { rabbits: Rabbit[] | null; source: Source } {
+  const [rabbits, setRabbits] = useState<Rabbit[] | null>(null)
+  const [source, setSource] = useState<Source>('sample')
   useEffect(() => {
     let active = true
     ;(async () => {
@@ -36,7 +38,7 @@ export function useFeaturedRabbits(limit = 6): { rabbits: Rabbit[] | null; sourc
           .limit(limit)
         const rows = (data ?? []) as RabbitRow[]
         if (active && rows.length > 0) {
-          setRabbits(rows.map((r) => ({ ...r, photos: r.photos ?? [], photo: r.photos?.[0] })))
+          setRabbits(rows.map(mapRabbit))
           setSource('live')
           return
         }
@@ -50,11 +52,13 @@ export function useFeaturedRabbits(limit = 6): { rabbits: Rabbit[] | null; sourc
       active = false
     }
   }, [limit])
-
   return { rabbits, source }
 }
 
-// Live staff-posted announcements (hidden when there are none).
+export function useFeaturedRabbits(limit = 6) {
+  return useRabbits(limit)
+}
+
 export function useAnnouncements(): Announcement[] {
   const [items, setItems] = useState<Announcement[]>([])
   useEffect(() => {
@@ -68,6 +72,54 @@ export function useAnnouncements(): Announcement[] {
       .limit(3)
       .then(({ data }) => {
         if (active && data) setItems(data as Announcement[])
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+  return items
+}
+
+// Live care guides from the app's care_articles table (null while loading).
+export function useCareArticles(): CareArticle[] | null {
+  const [items, setItems] = useState<CareArticle[] | null>(null)
+  useEffect(() => {
+    if (!isConfigured) {
+      setItems([])
+      return
+    }
+    let active = true
+    supabase
+      .from('care_articles')
+      .select('id,slug,title,icon,summary,tip')
+      .eq('is_published', true)
+      .order('sort_order', { ascending: true })
+      .then(({ data }) => {
+        if (active) setItems((data ?? []) as CareArticle[])
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+  return items
+}
+
+// Live volunteer opportunities (null while loading).
+export function useVolunteerOpps(): VolunteerOpp[] | null {
+  const [items, setItems] = useState<VolunteerOpp[] | null>(null)
+  useEffect(() => {
+    if (!isConfigured) {
+      setItems([])
+      return
+    }
+    let active = true
+    supabase
+      .from('volunteer_opportunities')
+      .select('id,category,title,detail,when_text,where_text,spots')
+      .eq('is_published', true)
+      .order('sort_order', { ascending: true })
+      .then(({ data }) => {
+        if (active) setItems((data ?? []) as VolunteerOpp[])
       })
     return () => {
       active = false
