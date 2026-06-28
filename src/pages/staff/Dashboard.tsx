@@ -1,0 +1,59 @@
+import { Link } from 'react-router-dom'
+import { useStaff } from '../../lib/staff'
+
+export default function StaffDashboard() {
+  const { user, membership, can } = useStaff()
+  const isAdmin = membership?.role === 'owner' || membership?.role === 'admin'
+
+  const tiles = [
+    can('announcements.post') && {
+      to: '/staff/announcements',
+      h: 'Announcements',
+      p: 'Post notices that show on the website home and the app.',
+    },
+    (can('adoptions.listings.create') ||
+      can('adoptions.listings.edit') ||
+      can('adoptions.status.change')) && {
+      to: '/staff/rabbits',
+      h: 'Adoptable rabbits',
+      p: 'Add rabbits with photos and set their adoption status.',
+    },
+  ].filter(Boolean) as { to: string; h: string; p: string }[]
+
+  return (
+    <div>
+      <div className="flex items-center gap-2">
+        <h1 className="font-display text-2xl font-black text-ink">Staff dashboard</h1>
+        <span className="rounded-full bg-brand-blue-50 px-2.5 py-0.5 text-xs font-bold text-brand-blue">
+          {membership ? membership.role[0].toUpperCase() + membership.role.slice(1) : ''}
+        </span>
+      </div>
+      <p className="mt-1 text-sm text-slate-600">
+        Signed in as <strong>{user?.email}</strong>
+      </p>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        {tiles.map((t) => (
+          <Link
+            key={t.to}
+            to={t.to}
+            className="rounded-2xl border border-black/5 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <h2 className="font-display text-lg font-extrabold text-brand-blue">{t.h}</h2>
+            <p className="mt-1.5 text-sm text-slate-600">{t.p}</p>
+          </Link>
+        ))}
+        {tiles.length === 0 && (
+          <p className="text-sm text-slate-600">
+            No tools have been turned on for your account yet. An owner can grant access.
+          </p>
+        )}
+      </div>
+
+      <p className="mt-8 rounded-2xl bg-brand-blue-50 px-4 py-3 text-sm text-slate-600">
+        Anything you change here updates <strong>both this website and the OHRR app</strong> — they
+        share the same live data.{!isAdmin ? '' : ' (More tools — volunteer, care guides, team — are coming next.)'}
+      </p>
+    </div>
+  )
+}

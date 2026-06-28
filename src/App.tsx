@@ -7,10 +7,32 @@ import Volunteer from './pages/Volunteer'
 import BunFest from './pages/BunFest'
 import Give from './pages/Give'
 import About from './pages/About'
+// Staff / owner backend (same Supabase as the app)
+import { StaffProvider } from './lib/staff'
+import StaffShell from './components/StaffShell'
+import StaffDashboard from './pages/staff/Dashboard'
+import ManageAnnouncements from './pages/staff/ManageAnnouncements'
+import ManageRabbits from './pages/staff/ManageRabbits'
 
 export default function App() {
   return (
     <Routes>
+      {/* Staff area — its own shell, gated by sign-in + membership */}
+      <Route
+        path="/staff"
+        element={
+          <StaffProvider>
+            <StaffShell />
+          </StaffProvider>
+        }
+      >
+        <Route index element={<StaffDashboard />} />
+        <Route path="announcements" element={<ManageAnnouncements />} />
+        <Route path="rabbits" element={<ManageRabbits />} />
+        <Route path="*" element={<StaffDashboard />} />
+      </Route>
+
+      {/* Public site */}
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/adopt" element={<Adopt />} />
